@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>เกมเลขเป้าหมาย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0221; --panel:#170a30; --panel2:#1f0f3d;
+    --pink:#ff2e63; --cyan:#08f7fe; --yellow:#f9c80e;
+    --text:#f1eaff; --dim:#9b8bc4; --line:#3a2a5c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  :root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+  body{
+    background:
+      radial-gradient(circle at 20% 10%, #2a1456 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #2a1456 0%, transparent 45%),
+      var(--bg);
+    color:var(--text); font-family:'Sarabun',sans-serif;
+    min-height:100%; display:flex; align-items:center; justify-content:center;
+    padding:22px;
+  }
+  .wrap{ width:100%; max-width:520px; }
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:20px;
+    padding:26px 24px; box-shadow:0 20px 60px -20px #000000a0;
+  }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:10px; }
+  .title{ font-family:'Chakra Petch',monospace,sans-serif; font-weight:700; font-size:21px; color:var(--cyan); letter-spacing:.3px; }
+  .stage-pill{
+    font-family:'Chakra Petch',monospace,sans-serif; font-weight:600; font-size:13px;
+    background:#0d0526; border:1px solid var(--line); padding:5px 12px; border-radius:999px; color:var(--yellow);
+  }
+  .sub{ color:var(--dim); font-size:13px; margin-bottom:20px; line-height:1.5; }
+  .sub b{ color:var(--text); }
+
+  .target-row{
+    display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:18px;
+  }
+  .target-box{
+    font-family:'Chakra Petch',monospace,sans-serif; font-weight:700; font-size:34px;
+    background:#0d0526; border:2px solid var(--pink); border-radius:14px; padding:8px 26px;
+    color:var(--pink); text-shadow:0 0 14px #ff2e6388;
+  }
+
+  .tiles{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:16px; min-height:60px; }
+  .tile{
+    position:relative; font-family:'Chakra Petch',monospace,sans-serif; font-weight:600; font-size:19px;
+    background:#0d0526; border:2px solid var(--line); color:var(--text); border-radius:12px;
+    padding:12px 16px; cursor:pointer; transition:all .15s ease; min-width:56px; text-align:center;
+  }
+  .tile:hover{ border-color:var(--cyan); }
+  .tile.sel{ border-color:var(--yellow); background:#241437; box-shadow:0 0 14px #f9c80e55; }
+  .tile .order{
+    position:absolute; top:-9px; right:-9px; width:18px; height:18px; border-radius:50%;
+    background:var(--yellow); color:#241300; font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .op-group{ margin-bottom:14px; }
+  .op-label{ font-size:11px; color:var(--dim); margin-bottom:6px; font-family:'Sarabun',sans-serif; }
+  .op-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .op-btn{
+    font-family:'Chakra Petch',monospace,sans-serif; font-weight:600; font-size:17px;
+    background:#0d0526; border:1.5px solid var(--line); color:var(--text); border-radius:10px;
+    padding:10px 16px; cursor:pointer; transition:all .15s ease;
+  }
+  .op-btn:hover:not(:disabled){ border-color:var(--cyan); color:var(--cyan); }
+  .op-btn:disabled{ opacity:.3; cursor:not-allowed; }
+
+  .msg{ min-height:20px; font-size:13px; font-family:'Sarabun',sans-serif; font-weight:600; margin-bottom:10px; }
+  .msg.err{ color:var(--pink); }
+  .msg.win{ color:var(--cyan); }
+
+  .history{
+    background:#0d0526; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-size:12px; color:var(--dim); max-height:80px; overflow-y:auto; margin-bottom:16px;
+    font-family:'Chakra Petch',monospace,sans-serif;
+  }
+  .history div{ padding:2px 0; }
+
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .btn{
+    font-family:'Chakra Petch',monospace,sans-serif; font-weight:600; font-size:14px;
+    border:none; border-radius:10px; cursor:pointer; padding:11px 16px; flex:1;
+  }
+  .btn-check{ background:var(--cyan); color:#021a1c; }
+  .btn-undo{ background:#0d0526; color:var(--text); border:1px solid var(--line); }
+  .btn-new{ background:#0d0526; color:var(--text); border:1px solid var(--line); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn:hover:not(:disabled){ filter:brightness(1.1); }
+
+  @media (max-width:480px){
+    .card{ padding:20px 16px; }
+    .target-box{ font-size:28px; padding:6px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header>
+      <div class="title">🎯 เกมเลขเป้าหมาย</div>
+      <div class="stage-pill" id="stagePill">ด่านที่ 1</div>
+    </header>
+    <p class="sub">แตะเลือกตัวเลข <b>1 ตัว</b> เพื่อใช้ √ หรือ ! หรือเลือก <b>2 ตัว</b> ตามลำดับเพื่อบวก ลบ คูณ หาร ยกกำลัง รวมตัวเลขทั้งหมดให้เหลือค่าเดียวเท่ากับเป้าหมายที่สุ่มในแต่ละด่าน</p>
+
+    <div class="target-row"><div class="target-box" id="targetBox">= 24</div></div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="op-group">
+      <div class="op-label">ตัวเลขเดียว (เลือก 1 ตัว)</div>
+      <div class="op-row">
+        <button class="op-btn" id="opSqrt">√ ถอดราก</button>
+        <button class="op-btn" id="opFact">n! แฟคทอเรียล</button>
+      </div>
+    </div>
+
+    <div class="op-group">
+      <div class="op-label">สองตัวเลข (เลือกตามลำดับ)</div>
+      <div class="op-row">
+        <button class="op-btn" id="opAdd">+</button>
+        <button class="op-btn" id="opSub">−</button>
+        <button class="op-btn" id="opMul">×</button>
+        <button class="op-btn" id="opDiv">÷</button>
+        <button class="op-btn" id="opPow">^ ยกกำลัง</button>
+      </div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+    <div class="history" id="history"></div>
+
+    <div class="actions">
+      <button class="btn btn-undo" id="btnUndo">↺ ย้อนกลับ</button>
+      <button class="btn btn-check" id="btnCheck">✓ ตรวจคำตอบ</button>
+      <button class="btn btn-new" id="btnNew">🔀 สุ่มชุดใหม่</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EPS = 1e-6;
+let TARGET = 24;
+let stage = 1;
+let tiles = [];      // {id, value, label}
+let selected = [];   // array of tile ids, in selection order
+let history = [];     // text log
+let undoStack = [];
+let nextId = 1;
+
+function fmt(v){
+  if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return String(Math.round(v * 10000) / 10000);
+}
+
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+function newPuzzle(){
+  TARGET = randInt(15, 90);
+  document.getElementById('targetBox').textContent = '= ' + TARGET;
+  tiles = [];
+  for(let i=0;i<4;i++){
+    const v = randInt(1,9);
+    tiles.push({ id: nextId++, value: v, label: String(v) });
+  }
+  selected = [];
+  history = [];
+  undoStack = [];
+  setMsg('', '');
+  render();
+}
+
+function setMsg(text, cls){
+  const m = document.getElementById('msg');
+  m.textContent = text;
+  m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+
+function pushHistory(text){
+  history.push(text);
+  const h = document.getElementById('history');
+  h.innerHTML = history.map(t => `<div>${t}</div>`).join('');
+  h.scrollTop = h.scrollHeight;
+}
+
+function snapshot(){
+  undoStack.push({ tiles: JSON.parse(JSON.stringify(tiles)), historyLen: history.length });
+}
+
+function undo(){
+  if(undoStack.length === 0) return;
+  const snap = undoStack.pop();
+  tiles = snap.tiles;
+  history = history.slice(0, snap.historyLen);
+  selected = [];
+  const h = document.getElementById('history');
+  h.innerHTML = history.map(t => `<div>${t}</div>`).join('');
+  setMsg('', '');
+  render();
+}
+
+function toggleSelect(id){
+  const idx = selected.indexOf(id);
+  if(idx >= 0){
+    selected.splice(idx, 1);
+  } else {
+    if(selected.length >= 2) selected.shift();
+    selected.push(id);
+  }
+  setMsg('', '');
+  render();
+}
+
+function getTile(id){ return tiles.find(t => t.id === id); }
+
+function applyUnary(kind){
+  if(selected.length !== 1){ setMsg('เลือกตัวเลข 1 ตัวก่อนนะ', 'err'); return; }
+  const t = getTile(selected[0]);
+  let result, label;
+  if(kind === 'sqrt'){
+    if(t.value < 0){ setMsg('ถอดรากของค่าติดลบไม่ได้', 'err'); return; }
+    result = Math.sqrt(t.value);
+    label = `√${t.label}`;
+  } else {
+    if(t.value < 0 || Math.abs(t.value - Math.round(t.value)) > 1e-9 || t.value > 10){
+      setMsg('แฟคทอเรียลใช้ได้กับจำนวนเต็ม 0-10 เท่านั้น', 'err'); return;
+    }
+    let f = 1; for(let i=2;i<=Math.round(t.value);i++) f *= i;
+    result = f;
+    label = `${t.label}!`;
+  }
+  snapshot();
+  pushHistory(`${label} = ${fmt(result)}`);
+  t.value = result; t.label = label;
+  selected = [];
+  checkOverflow(t);
+  render();
+}
+
+function applyBinary(kind){
+  if(selected.length !== 2){ setMsg('เลือกตัวเลข 2 ตัวตามลำดับก่อนนะ', 'err'); return; }
+  const a = getTile(selected[0]);
+  const b = getTile(selected[1]);
+  let result, symbol;
+  if(kind === 'add'){ result = a.value + b.value; symbol='+'; }
+  else if(kind === 'sub'){ result = a.value - b.value; symbol='−'; }
+  else if(kind === 'mul'){ result = a.value * b.value; symbol='×'; }
+  else if(kind === 'div'){
+    if(Math.abs(b.value) < 1e-9){ setMsg('หารด้วย 0 ไม่ได้', 'err'); return; }
+    result = a.value / b.value; symbol='÷';
+  } else if(kind === 'pow'){
+    if(Math.abs(b.value) > 6 || a.value > 50){ setMsg('เลขยกกำลังใหญ่เกินไป', 'err'); return; }
+    result = Math.pow(a.value, b.value); symbol='^';
+  }
+  if(!isFinite(result) || Math.abs(result) > 1e9){
+    setMsg('ผลลัพธ์มีค่ามากเกินไป', 'err'); return;
+  }
+  const label = `(${a.label}${symbol}${b.label})`;
+  snapshot();
+  pushHistory(`${a.label} ${symbol} ${b.label} = ${fmt(result)}`);
+  tiles = tiles.filter(t => t.id !== a.id && t.id !== b.id);
+  tiles.push({ id: nextId++, value: result, label });
+  selected = [];
+  render();
+}
+
+function checkOverflow(t){
+  if(!isFinite(t.value) || Math.abs(t.value) > 1e9){
+    setMsg('ผลลัพธ์มีค่ามากเกินไป กด ย้อนกลับ เพื่อแก้ไข', 'err');
+  }
+}
+
+function checkAnswer(){
+  if(tiles.length !== 1){ setMsg('รวมตัวเลขให้เหลือค่าเดียวก่อนนะ', 'err'); return; }
+  const v = tiles[0].value;
+  if(Math.abs(v - TARGET) < EPS){
+    setMsg(`🎉 ถูกต้อง! ${tiles[0].label} = ${TARGET}`, 'win');
+    stage++;
+    document.getElementById('stagePill').textContent = 'ด่านที่ ' + stage;
+    setTimeout(newPuzzle, 1400);
+  } else {
+    setMsg(`ยังไม่ใช่ ${TARGET} นะ (ได้ ${fmt(v)}) ลองย้อนกลับแล้วหาวิธีอื่น`, 'err');
+  }
+}
+
+function render(){
+  const tilesEl = document.getElementById('tiles');
+  tilesEl.innerHTML = '';
+  tiles.forEach(t => {
+    const btn = document.createElement('button');
+    const selIdx = selected.indexOf(t.id);
+    btn.className = 'tile' + (selIdx >= 0 ? ' sel' : '');
+    btn.innerHTML = fmt(t.value) + (selIdx >= 0 ? `<span class="order">${selIdx+1}</span>` : '');
+    btn.onclick = () => toggleSelect(t.id);
+    tilesEl.appendChild(btn);
+  });
+
+  const oneSel = selected.length === 1;
+  const twoSel = selected.length === 2;
+  document.getElementById('opSqrt').disabled = !oneSel;
+  document.getElementById('opFact').disabled = !oneSel;
+  document.getElementById('opAdd').disabled = !twoSel;
+  document.getElementById('opSub').disabled = !twoSel;
+  document.getElementById('opMul').disabled = !twoSel;
+  document.getElementById('opDiv').disabled = !twoSel;
+  document.getElementById('opPow').disabled = !twoSel;
+  document.getElementById('btnCheck').disabled = tiles.length !== 1;
+  document.getElementById('btnUndo').disabled = undoStack.length === 0;
+}
+
+document.getElementById('opSqrt').onclick = () => applyUnary('sqrt');
+document.getElementById('opFact').onclick = () => applyUnary('fact');
+document.getElementById('opAdd').onclick = () => applyBinary('add');
+document.getElementById('opSub').onclick = () => applyBinary('sub');
+document.getElementById('opMul').onclick = () => applyBinary('mul');
+document.getElementById('opDiv').onclick = () => applyBinary('div');
+document.getElementById('opPow').onclick = () => applyBinary('pow');
+document.getElementById('btnCheck').onclick = checkAnswer;
+document.getElementById('btnUndo').onclick = undo;
+document.getElementById('btnNew').onclick = newPuzzle;
+
+newPuzzle();
+</script>
+</body>
+</html>
